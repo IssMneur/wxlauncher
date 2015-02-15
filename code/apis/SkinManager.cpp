@@ -63,7 +63,7 @@ void SkinSystem::GenerateTCSkinChanged() {
 
 
 Skin::Skin()
-: newsSource(NULL) {
+: newsSource(boost::shared_ptr<const NewsSource>()) {
 }
 
 bool Skin::SetWindowTitle(const wxString& windowTitle) {
