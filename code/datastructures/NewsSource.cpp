@@ -33,7 +33,7 @@ NewsSource::NewsSource(const NewsSourceId id, const wxString& name,
 }
 
 boost::shared_ptr<const NewsSource> NewsSource::FindSource(const NewsSourceId id) {
-	wxCHECK_MSG(id != NEWS_SOURCE_ID_INVALID, NULL,
+	wxCHECK_MSG(id != NEWS_SOURCE_ID_INVALID, boost::shared_ptr<const NewsSource>(),
 		_T("FindSource given NEWS_SOURCE_ID_INVALID!"));
 	
 	if (newsSources.empty()) {
@@ -49,11 +49,11 @@ boost::shared_ptr<const NewsSource> NewsSource::FindSource(const NewsSourceId id
 	
 	wxLogWarning(_T("FindSource(): Unknown news source ID %d, returning NULL"), id);
 	
-	return NULL;
+	return boost::shared_ptr<const NewsSource>();
 }
 
 boost::shared_ptr<const NewsSource> NewsSource::FindSource(const wxString& name) {
-	wxCHECK_MSG(!name.IsEmpty(), NULL,
+	wxCHECK_MSG(!name.IsEmpty(), boost::shared_ptr<const NewsSource>(),
 		_T("FindSource() given empty name!"));
 	
 	if (newsSources.empty()) {
@@ -69,7 +69,7 @@ boost::shared_ptr<const NewsSource> NewsSource::FindSource(const wxString& name)
 	
 	wxLogWarning(_T("FindSource(): Unknown name %s, returning NULL"), name.c_str());
 	
-	return NULL;
+	return boost::shared_ptr<const NewsSource>();
 }
 
 void NewsSource::InitializeSources() {
