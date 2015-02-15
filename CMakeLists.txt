@@ -163,6 +163,8 @@ if((IS_WIN32) AND (NOT DEFINED PLATFORM_USES_REGISTRY))
 endif()
 
 include(${wxWidgets_USE_FILE})
+set(3RD_PARTY_DIR ${CMAKE_SOURCE_DIR}/3rdparty)
+include_directories(${3RD_PARTY_DIR}/boost_1_57_0)
 include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_SOURCE_DIR}/code)
 
 # Check to see if we have a GIT executable so that we will be able to
