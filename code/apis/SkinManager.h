@@ -79,8 +79,11 @@ public:
 	const wxBitmap& GetIdealIcon() const { return this->idealIcon; }
 	bool SetIdealIcon(const wxBitmap& idealIcon);
 	
-	const NewsSource* GetNewsSource() const { return this->newsSource; }
-	bool SetNewsSource(const NewsSource* newsSource);
+	boost::shared_ptr<const NewsSource> GetNewsSource() const {
+		return this->newsSource;
+	}
+	bool SetNewsSource(
+		boost::shared_ptr<const NewsSource> newsSource);
 	
 private:
 	static bool CheckStatusBarIconDimensions(const wxBitmap& icon);
@@ -105,7 +108,7 @@ private:
 	wxBitmap bigHelpIcon;
 	wxBitmap idealIcon;
 	
-	const NewsSource* newsSource;
+	boost::shared_ptr<const NewsSource> newsSource;
 };
 
 /** Class used to manage the skinning of the launcher.  The skinnable parts of

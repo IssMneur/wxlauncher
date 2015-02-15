@@ -288,7 +288,7 @@ bool Skin::SetIdealIcon(const wxBitmap& idealIcon) {
 	}
 }
 
-bool Skin::SetNewsSource(const NewsSource* newsSource) {
+bool Skin::SetNewsSource(boost::shared_ptr<const NewsSource> newsSource) {
 	if (newsSource == NULL) {
 		wxLogWarning(_T("Provided news source is NULL."));
 		return false;

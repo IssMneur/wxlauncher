@@ -22,7 +22,7 @@
 
 using std::vector;
 
-vector<NewsSource> NewsSource::newsSources;
+vector<boost::shared_ptr<NewsSource>> NewsSource::newsSources;
 
 NewsSource::NewsSource(const NewsSourceId id, const wxString& name,
 	const wxString& newsUrl, const wxString& label)
@@ -32,7 +32,7 @@ NewsSource::NewsSource(const NewsSourceId id, const wxString& name,
 	wxASSERT(!label.IsEmpty());
 }
 
-const NewsSource* NewsSource::FindSource(const NewsSourceId id) {
+boost::shared_ptr<const NewsSource> NewsSource::FindSource(const NewsSourceId id) {
 	wxCHECK_MSG(id != NEWS_SOURCE_ID_INVALID, NULL,
 		_T("FindSource given NEWS_SOURCE_ID_INVALID!"));
 	
@@ -40,10 +40,10 @@ const NewsSource* NewsSource::FindSource(const NewsSourceId id) {
 		InitializeSources();
 	}
 	
-	for (vector<NewsSource>::const_iterator it = newsSources.begin(),
+	for (vector<boost::shared_ptr<NewsSource>>::const_iterator it = newsSources.begin(),
 			end = newsSources.end(); it != end; ++it) {
-		if (it->GetId() == id) {
-			return &(*it);
+		if ((*it)->GetId() == id) {
+			return *it;
 		}
 	}
 	
@@ -52,7 +52,7 @@ const NewsSource* NewsSource::FindSource(const NewsSourceId id) {
 	return NULL;
 }
 
-const NewsSource* NewsSource::FindSource(const wxString& name) {
+boost::shared_ptr<const NewsSource> NewsSource::FindSource(const wxString& name) {
 	wxCHECK_MSG(!name.IsEmpty(), NULL,
 		_T("FindSource() given empty name!"));
 	
@@ -60,10 +60,10 @@ const NewsSource* NewsSource::FindSource(const wxString& name) {
 		InitializeSources();
 	}
 	
-	for (vector<NewsSource>::const_iterator it = newsSources.begin(),
+	for (vector<boost::shared_ptr<NewsSource>>::const_iterator it = newsSources.begin(),
 			end = newsSources.end(); it != end; ++it) {
-		if (!it->GetName().CmpNoCase(name)) {
-			return &(*it);
+		if (!(*it)->GetName().CmpNoCase(name)) {
+			return *it;
 		}
 	}
 	
@@ -80,15 +80,17 @@ void NewsSource::InitializeSources() {
 	// individual '&'s will be interpreted to indicate keyboard shortcuts
 	// so if anyone wants a & to appear in the news box label, write it as &&
 	newsSources.push_back(
-		NewsSource(
-			NEWS_SOURCE_ID_HLP,
-			_T("hlp"),
-			_T("http://www.audiozone.ro/hl/"),
-			_("Latest highlights from Hard Light Productions")));
+		boost::shared_ptr<NewsSource>(
+			new NewsSource(
+				NEWS_SOURCE_ID_HLP,
+				_T("hlp"),
+				_T("http://www.audiozone.ro/hl/"),
+				_("Latest highlights from Hard Light Productions"))));
 	newsSources.push_back(
-		NewsSource(
-			NEWS_SOURCE_ID_DIASPORA,
-			_T("diaspora"),
-			_T("http://diaspora.hard-light.net/hl.htm"),
-			_("Latest Diaspora news")));
+		boost::shared_ptr<NewsSource>(
+			new NewsSource(
+				NEWS_SOURCE_ID_DIASPORA,
+				_T("diaspora"),
+				_T("http://diaspora.hard-light.net/hl.htm"),
+				_("Latest Diaspora news"))));
 }

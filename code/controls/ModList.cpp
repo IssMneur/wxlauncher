@@ -519,7 +519,8 @@ ModList::ModList(wxWindow *parent, wxSize& size, wxString tcPath)
 				readIniFileString(config, MOD_INI_KEY_SKIN_NEWS_SOURCE, newsSourceName);
 				
 				if (!newsSourceName.IsEmpty()) {
-					const NewsSource* source = NewsSource::FindSource(newsSourceName);
+					boost::shared_ptr<const NewsSource> source =
+						NewsSource::FindSource(newsSourceName);
 					
 					if (source != NULL) {
 						this->TCSkin->SetNewsSource(source);

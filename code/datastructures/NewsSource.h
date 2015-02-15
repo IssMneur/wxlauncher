@@ -22,6 +22,8 @@
 #include <vector>
 #include <wx/string.h>
 
+#include <boost/smart_ptr/shared_ptr.hpp>
+
 enum NewsSourceId {
 	NEWS_SOURCE_ID_HLP,
 	NEWS_SOURCE_ID_DIASPORA,
@@ -38,8 +40,8 @@ public:
 	const wxString& GetNewsUrl() const { return this->newsUrl; }
 	const wxString& GetLabel() const { return this->label; }
 	
-	static const NewsSource* FindSource(NewsSourceId id);
-	static const NewsSource* FindSource(const wxString& name);
+	static boost::shared_ptr<const NewsSource> FindSource(NewsSourceId id);
+	static boost::shared_ptr<const NewsSource> FindSource(const wxString& name);
 private:
 	NewsSourceId id;
 	wxString name;
@@ -47,7 +49,7 @@ private:
 	wxString label;
 	
 	static void InitializeSources();
-	static std::vector<NewsSource> newsSources;
+	static std::vector<boost::shared_ptr<NewsSource>> newsSources;
 };
 
 #endif
