@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2009-2010 wxLauncher Team
+Copyright (C) 2009-2010,2015 wxLauncher Team
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -25,7 +25,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <wchar.h>
 
 #include "controls/Logger.h"
-#include "controls/StatusBar.h"
 
 #include "global/MemoryDebugging.h"
 
@@ -39,6 +38,8 @@ const wxString levels[] = {
 	wxT_2("INFO "),
 	wxT_2("DEBUG"),
 };
+
+LAUNCHER_DEFINE_EVENT_TYPE(EVT_STATUS_BAR_MESSAGE);
 /** Constructor. */
 Logger::Logger() {
 	wxFileName outFileName(wxStandardPaths::Get().GetUserDataDir(), wxT_2("wxLauncher.log"));
@@ -54,12 +55,11 @@ Logger::Logger() {
 	this->out = new wxFFileOutputStream(*outFile);
 	wxASSERT_MSG(out->IsOk(), wxT_2("Log output file is not valid!"));
 	this->out->Write("\357\273\277", 3);
-
-	this->statusBar = NULL;
 }
 
 /** Destructor. */
 Logger::~Logger() {
+	wxCriticalSectionLocker locker(this->dologLock);
 	char exitmsg[] = "\nLog closed.\n";
 	this->out->Write(exitmsg, strlen(exitmsg));
 	this->out->Close();
@@ -91,31 +91,47 @@ void Logger::DoLogRecord(
 	wxString str = wxString::Format(
     wxT_2("%s:%s:"), timestr.c_str(), levels[level].c_str());
 	wxString buf(msg);
+
+	// Serialize access to the logfile
+	wxCriticalSectionLocker locker(this->dologLock);
 	out->Write(str.mb_str(wxConvUTF8), str.size());
 	out->Write(buf.mb_str(wxConvUTF8), buf.size());
 	out->Write("\n", 1);
 
-	if ( this->statusBar != NULL ) {
-		if ( level == 1 ) { // error
-			this->statusBar->SetMainStatusText(buf, ID_SB_ERROR);
-		} else if ( level == 2 ) { // warning
-			this->statusBar->SetMainStatusText(buf, ID_SB_WARNING);
-		} else if ( level == 3 || level == 4 ) { // message, statubar
-			this->statusBar->SetMainStatusText(buf, ID_SB_OK);
-		} else if ( level == 5 ) { // info
-			this->statusBar->SetMainStatusText(buf, ID_SB_INFO);
+	// and handler list, because STL types are not thread safe
+	// for any operation
+	if (level <= 5) {
+		EventHandlers::iterator iter = this->eventHandlers.begin();
+		while (iter != this->eventHandlers.end()) {
+			wxCommandEvent evt(EVT_STATUS_BAR_MESSAGE, wxID_NONE);
+			evt.SetClientObject(new StatusBarMessage(buf, level));
+			wxEvtHandler* current = *iter;
+			current->AddPendingEvent(evt);
+			iter++;
 		}
-	}		
+	}
+}
+
+void Logger::AddEventHandler(wxEvtHandler *handler) {
+	wxCriticalSectionLocker locker(this->dologLock);
+	wxASSERT_MSG(eventHandlers.IndexOf(handler) == wxNOT_FOUND,
+		wxString::Format(
+			wxT_2("Logger::AddEventHandler(): Handler at %p already registered."),
+			handler));
+	this->eventHandlers.Append(handler);
+}
+
+void Logger::RemoveEventHandler(wxEvtHandler *handler) {
+	wxCriticalSectionLocker locker(this->dologLock);
+	wxASSERT_MSG(eventHandlers.IndexOf(handler) != wxNOT_FOUND,
+		wxString::Format(
+			wxT_2("Logger::RemoveEventHandler(): Handler at %p not registered."),
+			handler));
+	this->eventHandlers.DeleteObject(handler);
 }
 
 void Logger::Flush() {
-	outFile->Flush(); // Warning: ignoring return value from Flush().	
-}
-
-/** Stores the pointer the status bar that I am to send status messages to.
-If a status bar is already set, function will do nothing to the old statusbar.
-Logger does not take over managment of the statusbar passed in. */
-void Logger::SetStatusBarTarget(StatusBar *bar) {
-	this->statusBar = bar;
+	// Warning: ignoring return value from Flush().
+	outFile->Flush();
 }
 

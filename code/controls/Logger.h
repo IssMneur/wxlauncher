@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2009-2010 wxLauncher Team
+Copyright (C) 2009-2010,2015 wxLauncher Team
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -21,14 +21,35 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include <wx/wx.h>
 #include <wx/wfstream.h>
-#include "controls/StatusBar.h"
+
+#include <boost/smart_ptr/shared_ptr.hpp>
+
+#include "apis/EventHandlers.h"
+
+/** A new message has arrived to display in the status bar.
+
+The message is a StatusBarMessage class embeded as the
+ClientData of the wxCommandEvent.
+*/
+LAUNCHER_DECLARE_EVENT_TYPE(EVT_STATUS_BAR_MESSAGE);
+
+/** Simple structure to hold the message that is to be displayed.
+*/
+class StatusBarMessage: public wxClientData {
+public:
+	wxString msg;
+	wxLogLevel level;
+	StatusBarMessage(wxString _msg, wxLogLevel _level):
+	msg(_msg), level(_level)
+	{};
+	virtual ~StatusBarMessage() {
+	};
+};
 
 class Logger: public wxLog {
 public:
 	Logger();
 	virtual ~Logger();
-
-	void SetStatusBarTarget(StatusBar *bar);
 
 	/* Compatiblity with 2.8.x */
 #if wxMAJOR_VERSION == 2 && wxMINOR_VERSION >= 8
@@ -42,12 +63,14 @@ public:
 		const wxString& msg,
 		const wxLogRecordInfo& info);
 #endif
-	
+	void AddEventHandler(wxEvtHandler *handler);
+	void RemoveEventHandler(wxEvtHandler *handler);
 	virtual void Flush();
 private:
 	wxFFileOutputStream *out;
-	StatusBar *statusBar;
 	wxFFile *outFile;
+	wxCriticalSection dologLock;
+	EventHandlers eventHandlers;
 };
 
 #endif

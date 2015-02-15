@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2009-2010 wxLauncher Team
+Copyright (C) 2009-2010,2015 wxLauncher Team
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -43,6 +43,7 @@ const int ICON_FIELD_WIDTH = 25;
 BEGIN_EVENT_TABLE(StatusBar, wxStatusBar)
 EVT_SIZE(StatusBar::OnSize)
 EVT_COMMAND(wxID_NONE, EVT_TC_SKIN_CHANGED, StatusBar::OnTCSkinChanged)
+EVT_COMMAND(wxID_NONE, EVT_STATUS_BAR_MESSAGE, StatusBar::OnStatusBarMessage)
 END_EVENT_TABLE()
 
 StatusBar::StatusBar(wxWindow *parent)
@@ -73,11 +74,11 @@ StatusBar::StatusBar(wxWindow *parent)
 
 	this->SetStatusText(_T("Status bar created"), SB_FIELD_MAINTEXT);
 
-	dynamic_cast<Logger*>(wxLog::GetActiveTarget())->SetStatusBarTarget(this);
+	dynamic_cast<Logger*>(wxLog::GetActiveTarget())->AddEventHandler(this);
 }
 
 StatusBar::~StatusBar() {
-	dynamic_cast<Logger*>(wxLog::GetActiveTarget())->SetStatusBarTarget(NULL);
+	dynamic_cast<Logger*>(wxLog::GetActiveTarget())->RemoveEventHandler(this);
 }
 
 void StatusBar::OnSize(wxSizeEvent& WXUNUSED(event)) {
@@ -151,5 +152,22 @@ void StatusBar::EndToolTipStatusText() {
 	if (this->showingToolTip) {
 		this->PopStatusText(SB_FIELD_MAINTEXT);
 		this->showingToolTip = false;
+	}
+}
+
+void StatusBar::OnStatusBarMessage(wxCommandEvent& event) {
+	StatusBarMessage* msg =
+		dynamic_cast<StatusBarMessage*>(event.GetClientObject());
+	wxCHECK_RET(msg != NULL,
+		wxT_2("StatusBar::OnStatusBarMessage got NULL message"));
+
+	if ( msg->level == 1 ) { // error
+		this->SetMainStatusText(msg->msg, ID_SB_ERROR);
+	} else if ( msg->level == 2 ) { // warning
+		this->SetMainStatusText(msg->msg, ID_SB_WARNING);
+	} else if ( msg->level == 3 || msg->level == 4 ) { // message, statubar
+		this->SetMainStatusText(msg->msg, ID_SB_OK);
+	} else if ( msg->level == 5 ) { // info
+		this->SetMainStatusText(msg->msg, ID_SB_INFO);
 	}
 }

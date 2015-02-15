@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2009-2010 wxLauncher Team
+Copyright (C) 2009-2010,2015 wxLauncher Team
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -32,6 +32,7 @@ public:
 
 	void OnSize(wxSizeEvent& event);
 	void OnTCSkinChanged(wxCommandEvent& event);
+	void OnStatusBarMessage(wxCommandEvent& event);
 
 	void SetMainStatusText(wxString msg, int icon=ID_SB_NO_CHANGE);
 	void SetJobStatusText(int value, wxString msg=_T(""));
