@@ -344,6 +344,20 @@ add_executable(wxlauncher WIN32 MACOSX_BUNDLE
 if (COMMAND target_compile_features)
   target_compile_features(wxlauncher PRIVATE cxx_auto_type) # Enable C++11 because it is required for wxWidgets 3.0
 endif()
+
+# Amend manifest to tell Windows that the application is DPI aware (needed for Windows 8.1 and up)
+if(MSVC)
+  if(CMAKE_MAJOR_VERSION LESS 3)
+	message(WARNING "CMake version 3.0 or newer is required make launcher HIGHDPI aware")
+  else()
+    add_custom_command(
+      TARGET wxlauncher
+	  POST_BUILD
+	  COMMAND "mt.exe" -inputresource:\"$<TARGET_FILE:wxlauncher>\"\;\#1 -manifest \"${CMAKE_CURRENT_SOURCE_DIR}\\resources\\dpiawarescaleing.manifest\" -outputresource:\"$<TARGET_FILE:wxlauncher>\"\;\#1
+	  COMMENT "Adding display aware manifest..."
+	)
+  endif()
+endif(MSVC)
   
 set_target_properties(wxlauncher
   PROPERTIES LINKER_LANGUAGE CXX
