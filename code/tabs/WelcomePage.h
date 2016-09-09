@@ -49,6 +49,7 @@ private:
 
 	bool needToUpdateNews;
 	void getOrPromptUpdateNews(wxIdleEvent&);
+	bool _promptUpdateNews();
 
 	DECLARE_EVENT_TABLE();
 };

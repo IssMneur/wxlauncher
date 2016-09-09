@@ -518,80 +518,94 @@ void WelcomePage::getOrPromptUpdateNews(wxIdleEvent &WXUNUSED(event)) {
 	wxCHECK_RET(ctl != NULL, wxT("Cannot find update news checkbox"));
 
 	bool updateNews;
-	if (!ProMan::GetProfileManager()->GlobalRead(GBL_CFG_NET_DOWNLOAD_NEWS, &updateNews)) {
-		wxDialog* updateNewsQuestion = 
-			new wxDialog(NULL, wxID_ANY, 
-			_("wxLauncher - network access request"),
-			wxDefaultPosition, wxDefaultSize, 
-			wxDEFAULT_DIALOG_STYLE | wxSTAY_ON_TOP | wxDIALOG_NO_PARENT);
-		updateNewsQuestion->SetBackgroundColour(
-			wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW));
-
-		wxIcon helpIcon;
-		helpIcon.CopyFromBitmap(SkinSystem::GetSkinSystem()->GetHelpIcon());
-		updateNewsQuestion->SetIcon(helpIcon);
-
-		wxStaticText* updateNewsText1 = 
-			new wxStaticText(updateNewsQuestion, wxID_ANY, 
-				_("Should wxLauncher automatically retrieve the latest news?"),
-				wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE);
-		
-		wxStaticText* updateNewsText2 = 
-			new wxStaticText(updateNewsQuestion, wxID_ANY,
-				_("You can change this setting on the Welcome page."),
-				wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE);
-
-		wxButton* allowNewsUpdate = 
-			new wxButton(updateNewsQuestion, wxID_ANY, 
-				_("Yes"));
-		wxButton* denyNewsUpdate = 
-			new wxButton(updateNewsQuestion, wxID_ANY,
-				_("No"));
-		updateNewsQuestion->SetAffirmativeId(allowNewsUpdate->GetId());
-		updateNewsQuestion->SetEscapeId(denyNewsUpdate->GetId());
-#if 0
-		wxButton* helpButton = new wxButton(updateNewsQuestion, wxID_ANY,
-			_T("?"), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT);
-
-		helpButton->Connect(wxEVT_COMMAND_BUTTON_CLICKED,
-			wxCommandEventHandler(WelcomePage::OnUpdateNewsHelp));
-#endif
-
-		wxBoxSizer* updateNewsSizer = new wxBoxSizer(wxHORIZONTAL);
-		wxBoxSizer* bodySizer= new wxBoxSizer(wxVERTICAL);
-		wxBoxSizer* choiceSizer = new wxBoxSizer(wxHORIZONTAL);
-
-		wxStaticBitmap* questionImage = 
-			new wxStaticBitmap(updateNewsQuestion, wxID_ANY, SkinSystem::GetSkinSystem()->GetBigHelpIcon());
-
-		choiceSizer->Add(allowNewsUpdate, wxSizerFlags().Border(wxRIGHT, 5));
-		choiceSizer->Add(denyNewsUpdate);
-#if 0
-		choiceSizer->Add(helpButton, wxSizerFlags().Border(wxLEFT, 15));
-#endif
-
-		bodySizer->Add(updateNewsText1, wxSizerFlags().Center());
-		bodySizer->Add(updateNewsText2, wxSizerFlags().Center().Border(wxBOTTOM, 10));
-		bodySizer->Add(choiceSizer, wxSizerFlags().Center());
-
-		updateNewsSizer->Add(questionImage, wxSizerFlags().Center().Border(wxTOP|wxLEFT|wxBOTTOM, 5));
-		updateNewsSizer->Add(bodySizer, wxSizerFlags().Center().Border(wxALL, 5));
-		
-		updateNewsQuestion->SetSizerAndFit(updateNewsSizer);
-		updateNewsQuestion->Centre(wxBOTH | wxCENTRE_ON_SCREEN);
-
-		if ( updateNewsQuestion->GetAffirmativeId() == updateNewsQuestion->ShowModal() ) {
-			updateNews = true;
-		} else {
-			updateNews = false;
-		}
-		ProMan::GetProfileManager()->GlobalWrite(GBL_CFG_NET_DOWNLOAD_NEWS, updateNews);
-		
-		updateNewsQuestion->Destroy();
+	if (!ProMan::GetProfileManager()
+			->GlobalRead(GBL_CFG_NET_DOWNLOAD_NEWS, &updateNews))
+	{
+		updateNews = this->_promptUpdateNews();
+		ProMan::GetProfileManager()
+			->GlobalWrite(GBL_CFG_NET_DOWNLOAD_NEWS, updateNews);
 	}
 	ctl->SetValue(updateNews);
 	ctl->Enable();
 	this->needToUpdateNews = true;
+}
+
+bool WelcomePage::_promptUpdateNews() {
+	wxDialog* updateNewsQuestion =
+		new wxDialog(NULL, wxID_ANY,
+			_("wxLauncher - network access request"),
+			wxDefaultPosition, wxDefaultSize,
+			wxDEFAULT_DIALOG_STYLE | wxSTAY_ON_TOP | wxDIALOG_NO_PARENT);
+	updateNewsQuestion->SetBackgroundColour(
+		wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW));
+
+	wxIcon helpIcon;
+	helpIcon.CopyFromBitmap(SkinSystem::GetSkinSystem()->GetHelpIcon());
+	updateNewsQuestion->SetIcon(helpIcon);
+
+	wxStaticText* updateNewsText1 =
+		new wxStaticText(updateNewsQuestion, wxID_ANY,
+			_("Should wxLauncher automatically retrieve the latest news?"),
+			wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE);
+
+	wxStaticText* updateNewsText2 =
+		new wxStaticText(updateNewsQuestion, wxID_ANY,
+			_("You can change this setting on the Welcome page."),
+			wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE);
+
+	wxButton* allowNewsUpdate =
+		new wxButton(updateNewsQuestion, wxID_ANY,
+			_("Yes"));
+	wxButton* denyNewsUpdate =
+		new wxButton(updateNewsQuestion, wxID_ANY,
+			_("No"));
+	updateNewsQuestion->SetAffirmativeId(allowNewsUpdate->GetId());
+	updateNewsQuestion->SetEscapeId(denyNewsUpdate->GetId());
+#if 0
+	wxButton* helpButton = new wxButton(updateNewsQuestion, wxID_ANY,
+		_T("?"), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT);
+
+	helpButton->Connect(wxEVT_COMMAND_BUTTON_CLICKED,
+		wxCommandEventHandler(WelcomePage::OnUpdateNewsHelp));
+#endif
+
+	wxBoxSizer* updateNewsSizer = new wxBoxSizer(wxHORIZONTAL);
+	wxBoxSizer* bodySizer = new wxBoxSizer(wxVERTICAL);
+	wxBoxSizer* choiceSizer = new wxBoxSizer(wxHORIZONTAL);
+
+	wxStaticBitmap* questionImage =
+		new wxStaticBitmap(updateNewsQuestion, wxID_ANY,
+			SkinSystem::GetSkinSystem()->GetBigHelpIcon());
+
+	choiceSizer->Add(allowNewsUpdate, wxSizerFlags().Border(wxRIGHT, 5));
+	choiceSizer->Add(denyNewsUpdate);
+#if 0
+	choiceSizer->Add(helpButton, wxSizerFlags().Border(wxLEFT, 15));
+#endif
+
+	bodySizer->Add(updateNewsText1,
+		wxSizerFlags().Center());
+	bodySizer->Add(updateNewsText2,
+		wxSizerFlags().Center().Border(wxBOTTOM, 10));
+	bodySizer->Add(choiceSizer,
+		wxSizerFlags().Center());
+
+	updateNewsSizer->Add(questionImage,
+		wxSizerFlags().Center().Border(wxTOP | wxLEFT | wxBOTTOM, 5));
+	updateNewsSizer->Add(bodySizer,
+		wxSizerFlags().Center().Border(wxALL, 5));
+
+	updateNewsQuestion->SetSizerAndFit(updateNewsSizer);
+	updateNewsQuestion->Centre(wxBOTH | wxCENTRE_ON_SCREEN);
+
+	int affirmativeID = updateNewsQuestion->GetAffirmativeId();
+	int response = updateNewsQuestion->ShowModal();
+	updateNewsQuestion->Destroy();
+
+	if (affirmativeID == response) {
+		return true;
+	}
+	return false;
 }
 
 void WelcomePage::OnDownloadNewsCheck(wxCommandEvent& event) {
