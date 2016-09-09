@@ -363,11 +363,10 @@ SkinSystem* SkinSystem::GetSkinSystem() {
 	return SkinSystem::skinSystem;
 }
 
-SkinSystem::SkinSystem()
-: TCSkin(NULL),
-  font(wxSystemSettings::GetFont(wxSYS_DEFAULT_GUI_FONT)),
-  messageFont(14, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL) {
-
+SkinSystem::SkinSystem():
+	TCSkin(NULL), font(wxSystemSettings::GetFont(wxSYS_DEFAULT_GUI_FONT)),
+	messageFont(font.Larger().Larger())
+{
 	InitializeDefaultSkin();
 }
 
