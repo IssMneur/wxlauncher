@@ -112,6 +112,9 @@ EVT_CHECKBOX(ID_NET_DOWNLOAD_NEWS, WelcomePage::OnDownloadNewsCheck)
 EVT_IDLE(WelcomePage::UpdateNews)
 END_EVENT_TABLE()
 
+wxString UPDATE_NEWS_TOOLTIP_TEXT("Check this to have the launcher "
+	"retrieve the news the next time it runs");
+
 BEGIN_EVENT_TABLE(CloneProfileDialog, wxDialog)
 EVT_TEXT(ID_CLONE_PROFILE_NEWNAME, CloneProfileDialog::OnUpdateText)
 EVT_TEXT_ENTER(ID_CLONE_PROFILE_NEWNAME, CloneProfileDialog::OnPressEnterKey)
@@ -197,8 +200,9 @@ WelcomePage::WelcomePage(wxWindow* parent): wxPanel(parent, wxID_ANY) {
 	wxHtmlWindow* newsView = new wxHtmlWindow(this, ID_NEWS_HTML_PANEL);
 	newsView->SetPage(_T(""));
 	newsView->Connect(wxEVT_LEAVE_WINDOW, wxMouseEventHandler(WelcomePage::OnMouseOut));
-	updateNewsCheck = new wxCheckBox(this, ID_NET_DOWNLOAD_NEWS, _("Retrieve news at startup"));
-	updateNewsCheck->SetToolTip(_("Check this to have the launcher retrieve the news the next time it runs"));
+	wxCheckBox* updateNewsCheck = new wxCheckBox(this, ID_NET_DOWNLOAD_NEWS,
+		_("Retrieve news at startup"));
+	updateNewsCheck->SetToolTip(wxGetTranslation(UPDATE_NEWS_TOOLTIP_TEXT));
 	updateNewsCheck->Disable();
 	this->Connect(wxEVT_IDLE, wxIdleEventHandler(WelcomePage::getOrPromptUpdateNews));
 
@@ -510,7 +514,8 @@ void WelcomePage::UpdateNews(wxIdleEvent& WXUNUSED(event)) {
 
 void WelcomePage::getOrPromptUpdateNews(wxIdleEvent &WXUNUSED(event)) {
 	this->Disconnect(wxEVT_IDLE, wxIdleEventHandler(WelcomePage::getOrPromptUpdateNews));
-	wxCHECK_RET(updateNewsCheck != NULL, wxT("checkbox is NULL"));
+	wxCheckBox* ctl = wxL_CNTL_BY_ID(wxCheckBox, ID_NET_DOWNLOAD_NEWS);
+	wxCHECK_RET(ctl != NULL, wxT("Cannot find update news checkbox"));
 
 	bool updateNews;
 	if (!ProMan::GetProfileManager()->GlobalRead(GBL_CFG_NET_DOWNLOAD_NEWS, &updateNews)) {
@@ -584,8 +589,8 @@ void WelcomePage::getOrPromptUpdateNews(wxIdleEvent &WXUNUSED(event)) {
 		
 		updateNewsQuestion->Destroy();
 	}
-	updateNewsCheck->SetValue(updateNews);
-	updateNewsCheck->Enable();
+	ctl->SetValue(updateNews);
+	ctl->Enable();
 	this->needToUpdateNews = true;
 }
 

@@ -160,4 +160,8 @@ enum StatusBarIconIDs {
 	ID_SB_MAX_ID,
 };
 
+/* Macro to clean up finding controls by ID */
+#define wxL_CNTL_BY_ID(cntl, id) \
+	dynamic_cast<cntl*>(wxWindow::FindWindowById(id, this))
+
 #endif
