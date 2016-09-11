@@ -50,6 +50,7 @@ private:
 	bool needToUpdateNews;
 	void getOrPromptUpdateNews(wxIdleEvent&);
 	bool _promptUpdateNews();
+	wxBitmap _scaleBitmap(wxBitmap);
 
 	DECLARE_EVENT_TABLE();
 };

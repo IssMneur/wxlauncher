@@ -34,6 +34,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "global/MemoryDebugging.h" // Last include for memory debugging
 
 #define TIME_BETWEEN_NEWS_UPDATES			wxTimeSpan::Day()
+// Height of a line in Dialog Units
+#define LINE_HEIGHT 10
 
 class CloneProfileDialog: public wxDialog {
 public:
@@ -73,10 +75,23 @@ public:
 	}
 private:
 	void UpdateBanner() {
-		this->bitmap = SkinSystem::GetSkinSystem()->GetBanner();
-		wxASSERT_MSG(this->bitmap.IsOk(), _("Loaded bitmap is invalid."));
-		
-		this->SetMinSize(wxSize(bitmap.GetWidth(), bitmap.GetHeight()));
+		wxBitmap proposedBanner(SkinSystem::GetSkinSystem()->GetBanner());
+		wxASSERT_MSG(proposedBanner.IsOk(), _("Loaded bitmap is invalid."));
+#if wxCHECK_VERSION(3, 1, 0)
+		// FromDIP was added in 3.1.0
+		wxSize size(this->FromDIP(proposedBanner.GetSize()));
+
+		wxImage origImage(proposedBanner.ConvertToImage());
+		wxImage scaledImage(
+			origImage.Scale(
+				size.x, size.y, wxIMAGE_QUALITY_HIGH));
+
+		this->bitmap = wxBitmap(scaledImage);
+#else
+		this->bitmap = proposedBanner;
+		wxSize size(proposedBanner.GetWidth(), proposedBanner.GetHeight());
+#endif
+		this->SetMinSize(size);
 	}
 	void OnTCSkinChanged(wxCommandEvent &WXUNUSED(event)) {
 		UpdateBanner();
@@ -153,7 +168,8 @@ WelcomePage::WelcomePage(wxWindow* parent): wxPanel(parent, wxID_ANY) {
 	general->Connect(wxEVT_LEAVE_WINDOW, wxMouseEventHandler(WelcomePage::OnMouseOut));
 	
 	wxStaticBoxSizer* generalSizer = new wxStaticBoxSizer(generalBox, wxVERTICAL);
-	generalSizer->SetMinSize(wxSize(-1, 175));
+	generalSizer->SetMinSize(
+		this->ConvertDialogToPixels(wxSize(-1, 8* LINE_HEIGHT)));
 	generalSizer->Add(general, wxSizerFlags().Expand().Proportion(1));
 
 	// Profiles
@@ -215,6 +231,8 @@ WelcomePage::WelcomePage(wxWindow* parent): wxPanel(parent, wxID_ANY) {
 #else // helps ensure that all four news items appear without having to scroll
 		wxSizerFlags().Right().Border(wxTOP|wxRIGHT,5));
 #endif
+	newsSizer->SetMinSize(
+		this->ConvertDialogToPixels(wxSize(-1, 4*LINE_HEIGHT)));
 
 	// Final layout
 	wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
@@ -225,13 +243,6 @@ WelcomePage::WelcomePage(wxWindow* parent): wxPanel(parent, wxID_ANY) {
 	sizer->Add(generalSizer, wxSizerFlags().Proportion(0).Expand().Border(wxLEFT|wxRIGHT|wxBOTTOM, 5));
 	sizer->Add(profileVerticalSizer, wxSizerFlags().Proportion(0).Expand().Border(wxLEFT|wxRIGHT|wxBOTTOM, 5));
 	sizer->Add(newsSizer, wxSizerFlags().Expand().Proportion(1).Border(wxLEFT|wxRIGHT|wxBOTTOM, 5));
-
-	// mildly hackish way of ensuring a minimum launcher window size on all platforms
-#if IS_WIN32
-	sizer->SetMinSize(wxSize(TAB_AREA_WIDTH-10, TAB_AREA_HEIGHT-5));
-#else // to accommodate larger fonts/widgets on OS X/Linux
-	sizer->SetMinSize(wxSize(TAB_AREA_WIDTH-10, TAB_AREA_HEIGHT+10));
-#endif
 
 	this->SetSizerAndFit(sizer);
 	this->Layout();
@@ -530,6 +541,23 @@ void WelcomePage::getOrPromptUpdateNews(wxIdleEvent &WXUNUSED(event)) {
 	this->needToUpdateNews = true;
 }
 
+wxBitmap WelcomePage::_scaleBitmap(wxBitmap orig) {
+#if wxCHECK_VERSION(3, 1, 0)
+	// FromDIP was added in 3.1.0
+	wxSize origSize(orig.GetSize());
+	wxSize newSize(this->FromDIP(origSize));
+
+	wxImage origImage(orig.ConvertToImage());
+	wxImage scaledImage(
+		origImage.Scale(
+			newSize.x, newSize.y, wxIMAGE_QUALITY_HIGH));
+
+	return wxBitmap(scaledImage);
+#else
+	return orig;
+#endif
+}
+
 bool WelcomePage::_promptUpdateNews() {
 	wxDialog* updateNewsQuestion =
 		new wxDialog(NULL, wxID_ANY,
@@ -540,7 +568,9 @@ bool WelcomePage::_promptUpdateNews() {
 		wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW));
 
 	wxIcon helpIcon;
-	helpIcon.CopyFromBitmap(SkinSystem::GetSkinSystem()->GetHelpIcon());
+	helpIcon.CopyFromBitmap(
+		this->_scaleBitmap(
+			SkinSystem::GetSkinSystem()->GetHelpIcon()));
 	updateNewsQuestion->SetIcon(helpIcon);
 
 	wxStaticText* updateNewsText1 =
@@ -575,7 +605,7 @@ bool WelcomePage::_promptUpdateNews() {
 
 	wxStaticBitmap* questionImage =
 		new wxStaticBitmap(updateNewsQuestion, wxID_ANY,
-			SkinSystem::GetSkinSystem()->GetBigHelpIcon());
+			this->_scaleBitmap(SkinSystem::GetSkinSystem()->GetBigHelpIcon()));
 
 	choiceSizer->Add(allowNewsUpdate, wxSizerFlags().Border(wxRIGHT, 5));
 	choiceSizer->Add(denyNewsUpdate);
