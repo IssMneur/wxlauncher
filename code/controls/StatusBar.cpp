@@ -123,10 +123,20 @@ void StatusBar::OnTCSkinChanged(wxCommandEvent &WXUNUSED(event)) {
 void StatusBar::SetMainStatusText(wxString msg, int icon) {
 	this->SetStatusText(msg, SB_FIELD_MAINTEXT);
 	if ( icon > ID_SB_NO_CHANGE && icon < ID_SB_MAX_ID ) {
-		wxStaticBitmap* iconImage = dynamic_cast<wxStaticBitmap*>(wxWindow::FindWindowById(ID_STATUSBAR_STATUS_ICON, this));
-  wxCHECK_RET( iconImage != NULL, _T("Cannot find status bar icon image"));
+		wxStaticBitmap* iconImage =
+			wxL_CNTL_BY_ID(wxStaticBitmap, ID_STATUSBAR_STATUS_ICON);
+		wxCHECK_RET( iconImage != NULL,
+			_T("Cannot find status bar icon image"));
 
+#if wxCHECK_VERSION(3,1,0)
+		wxImage proposedImage(this->icons[icon].ConvertToImage());
+		wxSize size(this->FromDIP(this->icons[icon].GetSize()));
+		wxImage scaled(proposedImage.Scale(size.x, size.y,
+			wxIMAGE_QUALITY_HIGH));
+		iconImage->SetBitmap(scaled);
+#else
 		iconImage->SetBitmap(this->icons[icon]);
+#endif
 		iconImage->Refresh();
 	} else {
 		if ( icon != ID_SB_NO_CHANGE ) {
